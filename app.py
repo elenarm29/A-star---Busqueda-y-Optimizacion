@@ -15,8 +15,9 @@ import streamlit as st
 titulo = "Búsqueda y Optimización"
 actividad = "Actividad 1"
 master = "Máster en IA para el sector energético y de infraestructuras"
-fecha = "13/12/2025"
-autores = ["Elena Ruiz", "Autor 2", "Autor 3"]
+autores = ["Elena Ruiz", "Cristina Jiménez", "Airam Betancor"]
+# Betancor Padrón, Airam
+# Jiménez Pariente, Cristina Ariadna
 
 # -------------------------
 # Contenedor de portada
