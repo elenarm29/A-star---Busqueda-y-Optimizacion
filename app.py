@@ -85,7 +85,7 @@ else:
     def heuristic(node, graph):
         if heur_option == "Costo uniforme (h=0)":
             return 0
-        elif heur_option == "Arco más corto × costo más barato (subestimado)":
+        elif heur_option == "Arco más corto × costo más barato":
             outgoing = graph.out_edges(node, data=True)
             if not outgoing:
                 return 0
