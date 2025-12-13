@@ -178,7 +178,7 @@ def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
         G_tree, pos,
         arrows=True,
         arrowstyle='-|>',
-        arrowsize=18,
+        arrowsize=10,
         edge_color='black',
         width=1.0,
         ax=ax
@@ -261,7 +261,7 @@ if st.button("Ejecutar A*"):
         widths.append(2.0)
 
     nx.draw_networkx_edges(G, pos_fixed, edge_color=edge_colors, width=widths,
-                           arrows=True, arrowstyle='-|>', arrowsize=12,
+                           arrows=True, arrowstyle='-|>', arrowsize=10,
                            connectionstyle='arc3,rad=0.2', ax=ax)
 
     edge_labels = {(u,v): f"{attrs['km']}km/{attrs['cost_state']}" for u,v,attrs in G.edges(data=True)}
@@ -270,7 +270,7 @@ if st.button("Ejecutar A*"):
     if result["path"] and len(result["path"])>1:
         path_edges = list(zip(result["path"][:-1], result["path"][1:]))
         nx.draw_networkx_edges(G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
-                               arrows=True, arrowstyle='-|>', arrowsize=12,
+                               arrows=True, arrowstyle='-|>', arrowsize=10,
                                connectionstyle='arc3,rad=0.2', ax=ax)
 
     # legend_elements = [
