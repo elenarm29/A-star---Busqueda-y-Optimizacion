@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 st.set_page_config(page_title="A* - Buscador de rutas", layout="centered")
-st.title("Algoritmo Aa*")
+st.title("Algoritmo A*")
 st.write("Selecciona origen, destino y heurística.")
 
 # --------------------------
@@ -201,20 +201,20 @@ def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
 if st.button("Ejecutar A*"):
     result = a_star_full(G, start, goal)
 
-    # Tabla de expansiones
-    if result["log"]:
-        df_log = pd.DataFrame(result["log"], columns=["step","current","g","h","f","neighbors","open_set","closed_set"])
-        solution_set = set(result["path"])
-        def highlight_solution(row):
-            if row["current"] in solution_set:
-                return ['background-color: #c4f7c4'] * len(row)
-            return [''] * len(row)
+    # # Tabla de expansiones
+    # if result["log"]:
+    #     df_log = pd.DataFrame(result["log"], columns=["step","current","g","h","f","neighbors","open_set","closed_set"])
+    #     solution_set = set(result["path"])
+    #     def highlight_solution(row):
+    #         if row["current"] in solution_set:
+    #             return ['background-color: #c4f7c4'] * len(row)
+    #         return [''] * len(row)
 
-        st.subheader("Registro completo de expansión")
-        st.dataframe(
-            df_log.style.apply(highlight_solution, axis=1)
-                  .format({"g": "{:.2f}", "h": "{:.2f}", "f": "{:.2f}"})
-        )
+    #     st.subheader("Registro completo de expansión")
+    #     st.dataframe(
+    #         df_log.style.apply(highlight_solution, axis=1)
+    #               .format({"g": "{:.2f}", "h": "{:.2f}", "f": "{:.2f}"})
+    #     )
 
     # Camino óptimo
     if result["path"]:
