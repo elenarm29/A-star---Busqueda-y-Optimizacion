@@ -4,6 +4,8 @@ import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.lines import Line2D
+
 
 st.set_page_config(page_title="A* - Buscador de rutas", layout="centered")
 st.title("Algoritmo A*")
@@ -60,6 +62,12 @@ def heuristic(node, graph):
         min_km = min(attrs["km"] for _, _, attrs in outgoing)
         return min_km * 2
     return 0
+
+if heur_option == "Costo uniforme (h=0)":
+    st.caption("Heurística nula: el algoritmo se comporta como Dijkstra.")
+else:
+    st.caption("Heurística subestimada basada en el arco saliente más corto.")
+
 
 # --------------------------
 # Algoritmo A* paso a paso con log completo
@@ -223,13 +231,23 @@ if st.button("Ejecutar A*"):
         st.table(pd.DataFrame(final_rows).style.format({"g": "{:.2f}", "h": "{:.2f}", "f": "{:.2f}"}))
 
     # Grafo final
-    st.subheader("Grafo (azul = camino final)")
+    st.subheader("Grafo")
+    st.write("En color azul se muestra el camino escogido:")
     pos_fixed = {
         "A": (0, 2.7), "B": (1, 3), "C": (2, 3), "F": (0.2, 1.7),
         "D": (2.2, 2), "E": (1, 1), "G": (0, 0), "H": (2.1, 0)
     }
     fig, ax = plt.subplots(figsize=(7,6))
-    nx.draw_networkx_nodes(G, pos_fixed, node_size=800, ax=ax)
+    # nx.draw_networkx_nodes(G, pos_fixed, node_size=800, ax=ax)
+    nx.draw_networkx_nodes(
+        G, pos_fixed,
+        node_size=800,
+        node_color="white",   # relleno blanco
+        edgecolors="black",   # borde negro
+        linewidths=2,
+        ax=ax
+    )
+
     nx.draw_networkx_labels(G, pos_fixed, font_weight='bold', ax=ax)
 
     edge_colors = []
@@ -252,14 +270,25 @@ if st.button("Ejecutar A*"):
     if result["path"] and len(result["path"])>1:
         path_edges = list(zip(result["path"][:-1], result["path"][1:]))
         nx.draw_networkx_edges(G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
-                               arrows=True, arrowstyle='-|>', arrowsize=16,
+                               arrows=True, arrowstyle='-f|>', arrowsize=16,
                                connectionstyle='arc3,rad=0.2', ax=ax)
+
+    legend_elements = [
+        Line2D([0], [0], color='green', lw=2, label='Verde (coste bajo)'),
+        Line2D([0], [0], color='orange', lw=2, label='Naranja (coste medio)'),
+        Line2D([0], [0], color='red', lw=2, label='Rojo (coste alto)'),
+        Line2D([0], [0], color='blue', lw=4, label='Camino óptimo'),
+    ]
+    
+    ax.legend(handles=legend_elements, loc='lower left')
+        
     ax.axis('off')
     st.pyplot(fig)
 
     # Árbol de expansión
     if result["path"]:
-        st.subheader("Árbol de expansión por iteración")
+        st.subheader("Árbol de expansión")
+        st.write("En verde se muestran los nodos finales escogidos")
         draw_decision_tree(
             solution_path=result["path"],
             expansion_log=result["log"],
