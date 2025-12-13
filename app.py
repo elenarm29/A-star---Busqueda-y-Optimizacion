@@ -6,6 +6,39 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.lines import Line2D
 
+### VAMOS A AÑADIR PRIMERO UNA PORTADA QUE PONGA LOS NOMBRES Y TODO  ###
+import streamlit as st
+
+# -------------------------
+# Datos de portada
+# -------------------------
+titulo = "Búsqueda y Optimización"
+actividad = "Actividad 1"
+master = "Máster en IA para el sector energético y de infraestructuras"
+fecha = "13/12/2025"
+autores = ["Elena Ruiz", "Autor 2", "Autor 3"]
+
+# -------------------------
+# Contenedor de portada
+# -------------------------
+if 'start_app' not in st.session_state:
+    st.session_state.start_app = False
+
+if not st.session_state.start_app:
+    st.title(titulo)
+    st.subheader(actividad)
+    st.write(master)
+    st.write(f"Fecha: {fecha}")
+    st.write("Autores: " + ", ".join(autores))
+    st.button("Continuar al algoritmo", on_click=lambda: st.session_state.update({'start_app': True}))
+else:
+    st.title("Algoritmo A*")
+    st.write("Selecciona origen, destino y heurística")
+    
+    # Aquí va TODO tu código de A*
+
+
+
 
 st.set_page_config(page_title="A* - Buscador de rutas", layout="centered")
 st.title("Algoritmo A*")
