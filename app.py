@@ -267,11 +267,27 @@ if st.button("Ejecutar A*"):
     edge_labels = {(u,v): f"{attrs['km']}km/{attrs['cost_state']}" for u,v,attrs in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos_fixed, edge_labels=edge_labels, font_size=8, ax=ax)
 
+    # if result["path"] and len(result["path"])>1:
+    #     path_edges = list(zip(result["path"][:-1], result["path"][1:]))
+    #     nx.draw_networkx_edges(G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
+    #                            arrows=True, arrowstyle='-|>', arrowsize=10,
+    #                            connectionstyle='arc3,rad=0.2', ax=ax)
+        
     if result["path"] and len(result["path"])>1:
         path_edges = list(zip(result["path"][:-1], result["path"][1:]))
-        nx.draw_networkx_edges(G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
-                               arrows=True, arrowstyle='-|>', arrowsize=10,
-                               connectionstyle='arc3,rad=0.2', ax=ax)
+        nx.draw_networkx_edges(
+            G, pos_fixed, 
+            edgelist=path_edges, 
+            edge_color='blue', 
+            width=4.0,
+            arrows=True, 
+            arrowstyle='-|>', 
+            arrowsize=16,
+            connectionstyle='arc3,rad=0.2', 
+            ax=ax,
+            min_source_margin=15,  # evita solapamiento con el nodo de origen
+            min_target_margin=15   # evita solapamiento con el nodo destino
+        )
 
     # legend_elements = [
     #     Line2D([0], [0], color='green', lw=2, label='Verde (coste bajo)'),
