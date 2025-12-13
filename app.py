@@ -80,13 +80,13 @@ else:
     # --------------------------
     heur_option = st.selectbox(
         "Selecciona una heurística",
-        ["Arco más corto × 2 (subestimado)", "Costo uniforme (h=0)"]
+        ["Arco más corto × costo más barato", "Costo uniforme (h=0)"]
     )
     
     def heuristic(node, graph):
         if heur_option == "Costo uniforme (h=0)":
             return 0
-        elif heur_option == "Arco más corto × 2 (subestimado)":
+        elif heur_option == "Arco más corto × costo más barato (subestimado)":
             outgoing = graph.out_edges(node, data=True)
             if not outgoing:
                 return 0
@@ -97,7 +97,7 @@ else:
     if heur_option == "Costo uniforme (h=0)":
         st.caption("Heurística nula: el algoritmo se comporta como Dijkstra.")
     else:
-        st.caption("Heurística subestimada basada en el arco saliente más corto.")
+        st.caption("Heurística subestimada basada en el arco saliente más corto, multiplicando por el costo más barato.")
     
     
     # --------------------------
