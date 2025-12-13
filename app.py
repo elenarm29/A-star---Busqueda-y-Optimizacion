@@ -273,14 +273,14 @@ if st.button("Ejecutar A*"):
                                arrows=True, arrowstyle='-|>', arrowsize=16,
                                connectionstyle='arc3,rad=0.2', ax=ax)
 
-    legend_elements = [
-        Line2D([0], [0], color='green', lw=2, label='Verde (coste bajo)'),
-        Line2D([0], [0], color='orange', lw=2, label='Naranja (coste medio)'),
-        Line2D([0], [0], color='red', lw=2, label='Rojo (coste alto)'),
-        Line2D([0], [0], color='blue', lw=4, label='Camino óptimo'),
-    ]
+    # legend_elements = [
+    #     Line2D([0], [0], color='green', lw=2, label='Verde (coste bajo)'),
+    #     Line2D([0], [0], color='orange', lw=2, label='Naranja (coste medio)'),
+    #     Line2D([0], [0], color='red', lw=2, label='Rojo (coste alto)'),
+    #     Line2D([0], [0], color='blue', lw=4, label='Camino óptimo'),
+    # ]
     
-    ax.legend(handles=legend_elements, loc='lower left')
+    # ax.legend(handles=legend_elements, loc='lower left')
         
     ax.axis('off')
     st.pyplot(fig)
