@@ -218,7 +218,7 @@ if st.button("Ejecutar A*"):
 
     # Camino óptimo
     if result["path"]:
-        st.subheader("Camino óptimo – valores finales")
+        st.subheader("Camino óptimo")
         final_rows = [{"node": n, "g": result["g"][n], "h": result["h"][n], "f": result["f"][n]} for n in result["path"]]
         st.table(pd.DataFrame(final_rows).style.format({"g": "{:.2f}", "h": "{:.2f}", "f": "{:.2f}"}))
 
