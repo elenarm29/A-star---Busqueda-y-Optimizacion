@@ -260,12 +260,26 @@ if st.button("Ejecutar A*"):
         else: edge_colors.append('gray')
         widths.append(2.0)
 
-    nx.draw_networkx_edges(G, pos_fixed, edge_color=edge_colors, width=widths,
-                           arrows=True, arrowstyle='-|>', arrowsize=10,
-                           connectionstyle='arc3,rad=0.2', ax=ax)
+    # nx.draw_networkx_edges(G, pos_fixed, edge_color=edge_colors, width=widths,
+    #                        arrows=True, arrowstyle='-|>', arrowsize=10,
+    #                        connectionstyle='arc3,rad=0.2', ax=ax)
+    nx.draw_networkx_edges(
+        G, pos_fixed,
+        edge_color=edge_colors,
+        width=widths,
+        arrows=True,
+        arrowstyle='-|>',
+        arrowsize=10,
+        connectionstyle='arc3,rad=0.2',
+        ax=ax,
+        min_source_margin=15,   # evita que la flecha se meta dentro del nodo origen
+        min_target_margin=15    # evita que la flecha se meta dentro del nodo destino
+    )
+
 
     edge_labels = {(u,v): f"{attrs['km']}km/{attrs['cost_state']}" for u,v,attrs in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos_fixed, edge_labels=edge_labels, font_size=8, ax=ax)
+    
 
     # if result["path"] and len(result["path"])>1:
     #     path_edges = list(zip(result["path"][:-1], result["path"][1:]))
