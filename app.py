@@ -29,7 +29,6 @@ if not st.session_state.start_app:
     st.title(titulo)
     st.subheader(actividad)
     st.write(master)
-    st.write(f"Fecha: {fecha}")
     st.write("Autores: " + ", ".join(autores))
     st.button("Continuar al algoritmo", on_click=lambda: st.session_state.update({'start_app': True}))
 else:
