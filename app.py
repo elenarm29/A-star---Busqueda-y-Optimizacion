@@ -270,7 +270,7 @@ if st.button("Ejecutar A*"):
     if result["path"] and len(result["path"])>1:
         path_edges = list(zip(result["path"][:-1], result["path"][1:]))
         nx.draw_networkx_edges(G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
-                               arrows=True, arrowstyle='-|>', arrowsize=16,
+                               arrows=True, arrowstyle='-|>', arrowsize=12,
                                connectionstyle='arc3,rad=0.2', ax=ax)
 
     # legend_elements = [
