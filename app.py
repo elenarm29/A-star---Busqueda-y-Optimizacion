@@ -14,7 +14,7 @@ import streamlit as st
 # -------------------------
 titulo = "Búsqueda y Optimización"
 actividad = "Actividad 1"
-master = "Máster en IA para el sector energético y de infraestructuras"
+master = "Máster en IA para el sector de la Energía y las Infraestructuras"
 autores = ["Elena Ruiz", "Cristina Jiménez", "Airam Betancor"]
 # Betancor Padrón, Airam
 # Jiménez Pariente, Cristina Ariadna
