@@ -174,13 +174,15 @@ def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
     # nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=8,
     #                        connectionstyle='arc3,rad=0.0', ax=ax)
     # Dibujar edges como líneas rectas con flecha
-
     nx.draw_networkx_edges(
-        G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
-        arrows=True, arrowstyle='-|>', arrowsize=16,
-        connectionstyle='arc3,rad=0.2', ax=ax
+        G_tree, pos,
+        arrows=True,
+        arrowstyle='-|>',
+        arrowsize=18,
+        edge_color='black',
+        width=1.0,
+        ax=ax
     )
-
 
 
     # Dibujar solo rectángulos con bbox, nada de círculos
@@ -268,7 +270,7 @@ if st.button("Ejecutar A*"):
     if result["path"] and len(result["path"])>1:
         path_edges = list(zip(result["path"][:-1], result["path"][1:]))
         nx.draw_networkx_edges(G, pos_fixed, edgelist=path_edges, edge_color='blue', width=4.0,
-                               arrows=True, arrowstyle='-f|>', arrowsize=16,
+                               arrows=True, arrowstyle='-|>', arrowsize=16,
                                connectionstyle='arc3,rad=0.2', ax=ax)
 
     legend_elements = [
