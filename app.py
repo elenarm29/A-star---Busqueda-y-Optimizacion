@@ -109,68 +109,64 @@ else:
     # Algoritmo A* paso a paso con log completo
     # --------------------------
     def a_star_full(graph, start, goal):
-        open_heap = []
-        heapq.heappush(open_heap, (0, start))
-        came_from = {}
-        closed = set()
-        g = {start: 0}
-        f = {start: heuristic_wrapper(start, graph, closed)}
-
-
-        expansion_log = []
-        step = 1
+    open_heap = []
+    heapq.heappush(open_heap, (0, start))
+    came_from = {}
+    closed = set()
     
-        while open_heap:
-            _, current = heapq.heappop(open_heap)
-            if current in closed:
+    g = {start: 0}
+    h = {start: heuristic_wrapper(start, graph, closed)}
+    f = {start: g[start] + h[start]}
+
+    expansion_log = []
+    step = 1
+
+    while open_heap:
+        _, current = heapq.heappop(open_heap)
+        if current in closed:
+            continue
+
+        # --- todos los vecinos posibles ---
+        neighbors = [n for _, n, _ in graph.out_edges(current, data=True) if n not in closed]
+
+        # Guardar h y f **actuales** antes de marcar como cerrado
+        hcur = h[current]
+        fcur = f[current]
+
+        # Registrar el paso con todos los vecinos
+        open_nodes = [n for _, n in open_heap]
+        expansion_log.append((step, current, g[current], hcur, fcur, neighbors, open_nodes, list(closed)))
+        step += 1
+
+        if current == goal:
+            # reconstruir camino óptimo
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.append(current)
+            path = path[::-1]
+            return {"path": path, "log": expansion_log, "g": g, "h": h, "f": f, "came_from": came_from}
+
+        closed.add(current)
+
+        # expandir vecinos según A*
+        for _, neighbor, attrs in graph.out_edges(current, data=True):
+            if neighbor in closed:
                 continue
-    
-            hcur = heuristic_wrapper(current, graph, closed)
 
-            fcur = g[current] + hcur
-    
-            # --- todos los vecinos posibles ---
-            neighbors = [n for _, n, _ in graph.out_edges(current, data=True) if n not in closed]
-    
-            # Registrar el paso con todos los vecinos
-            open_nodes = [n for _, n in open_heap]
-            expansion_log.append((
-                step, current, g[current], hcur, fcur, neighbors, open_nodes, list(closed)
-            ))
-            step += 1
-    
-            if current == goal:
-                # reconstruir camino óptimo
-                path = [current]
-                while current in came_from:
-                    current = came_from[current]
-                    path.append(current)
-                path = path[::-1]
-    
-                g_vals = g.copy()
-                h_vals = {n: heuristic_wrapper(n, graph, closed) for n in g_vals.keys()}
+            tentative_g = g[current] + attrs['km'] * attrs['cost_state']
+            tentative_h = heuristic_wrapper(neighbor, graph, closed)
+            tentative_f = tentative_g + tentative_h
 
-                f_vals = {n: g_vals[n] + h_vals[n] for n in g_vals.keys()}
-                return {"path": path, "log": expansion_log, "g": g_vals, "h": h_vals, "f": f_vals, "came_from": came_from}
-    
-            closed.add(current)
-    
+            if neighbor not in g or tentative_g < g[neighbor]:
+                came_from[neighbor] = current
+                g[neighbor] = tentative_g
+                h[neighbor] = tentative_h
+                f[neighbor] = tentative_f
+                heapq.heappush(open_heap, (tentative_f, neighbor))
 
-            # expandir vecinos según A*
-            for _, neighbor, attrs in graph.out_edges(current, data=True):
-                if neighbor in closed:
-                    continue
-            
-                tentative_g = g[current] + attrs['km'] * attrs['cost_state']
-            
-                if neighbor not in g or tentative_g < g[neighbor]:
-                    came_from[neighbor] = current
-                    g[neighbor] = tentative_g
-                    f[neighbor] = tentative_g + heuristic_wrapper(neighbor, graph, closed)
-                    heapq.heappush(open_heap, (f[neighbor], neighbor))
+    return {"path": None, "log": expansion_log, "g": g, "h": h, "f": f, "came_from": came_from}
 
-    
-        return {"path": None, "log": expansion_log, "g": g, "h": {}, "f": {}, "came_from": {}}
     
     # --------------------------
     # Dibujar árbol de expansión por iteración
