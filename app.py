@@ -83,14 +83,20 @@ else:
     )
 
     def heuristic(node, graph, closed):
-    outgoing = [
-        attrs["km"]
-        for _, n, attrs in graph.out_edges(node, data=True)
-        if n not in closed
-    ]
-    if not outgoing:
-        return 0
-    return min(outgoing) * 2
+        outgoing = [
+            attrs["km"]
+            for _, n, attrs in graph.out_edges(node, data=True)
+            if n not in closed
+        ]
+        if not outgoing:
+            return 0
+        return min(outgoing) * 2
+
+    def heuristic_wrapper(node, graph, closed):
+        if heur_option == "Costo uniforme (h=0)":
+            return 0
+        else:
+            return heuristic(node, graph, closed)
 
     
     if heur_option == "Costo uniforme (h=0)":
@@ -106,9 +112,11 @@ else:
         open_heap = []
         heapq.heappush(open_heap, (0, start))
         came_from = {}
-        g = {start: 0}
-        f = {start: heuristic(start, graph)}
         closed = set()
+        g = {start: 0}
+        f = {start: heuristic_wrapper(start, graph, closed)}
+
+
         expansion_log = []
         step = 1
     
@@ -117,7 +125,8 @@ else:
             if current in closed:
                 continue
     
-            hcur = heuristic(current, graph)
+            hcur = heuristic_wrapper(current, graph, closed)
+
             fcur = g[current] + hcur
     
             # --- todos los vecinos posibles ---
@@ -139,20 +148,27 @@ else:
                 path = path[::-1]
     
                 g_vals = g.copy()
-                h_vals = {n: heuristic(n, graph) for n in g_vals.keys()}
+                h_vals = {n: heuristic_wrapper(n, graph, closed) for n in g_vals.keys()}
+
                 f_vals = {n: g_vals[n] + h_vals[n] for n in g_vals.keys()}
                 return {"path": path, "log": expansion_log, "g": g_vals, "h": h_vals, "f": f_vals, "came_from": came_from}
     
             closed.add(current)
     
+
             # expandir vecinos según A*
             for _, neighbor, attrs in graph.out_edges(current, data=True):
+                if neighbor in closed:
+                    continue
+            
                 tentative_g = g[current] + attrs['km'] * attrs['cost_state']
+            
                 if neighbor not in g or tentative_g < g[neighbor]:
                     came_from[neighbor] = current
                     g[neighbor] = tentative_g
-                    f[neighbor] = tentative_g + heuristic(neighbor, graph)
+                    f[neighbor] = tentative_g + heuristic_wrapper(neighbor, graph, closed)
                     heapq.heappush(open_heap, (f[neighbor], neighbor))
+
     
         return {"path": None, "log": expansion_log, "g": g, "h": {}, "f": {}, "came_from": {}}
     
