@@ -247,6 +247,8 @@ else:
         node_colors = {}
         levels = {}  # nivel -> lista de nodos
         pos = {}
+        parent_of = {}
+
     
         node_count = {}  # contador de apariciones de cada letra
     
