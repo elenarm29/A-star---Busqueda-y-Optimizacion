@@ -288,7 +288,6 @@ else:
                 child_unique = f"{n}_{node_count[n]}"
                 G_tree.add_node(child_unique)
                 node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-                # verde solo si es el siguiente en solution_path
                 if green_index < len(solution_path) and n == solution_path[green_index]:
                     node_colors[child_unique] = 'lightgreen'
                     green_nodes_queue.append(child_unique)
@@ -296,20 +295,34 @@ else:
                 else:
                     node_colors[child_unique] = 'lightgray'
                 G_tree.add_edge(parent_unique, child_unique)
+                parent_of[child_unique] = parent_unique  # <-- aquí guardamos el padre
                 levels[current_level].append(child_unique)
+
     
             current_level += 1
     
         # Calcular posiciones centradas por nivel
+        # Calcular posiciones centradas respecto a los padres
+        pos = {}
+        y_gap = 1.5
         for lvl, nodes_in_level in levels.items():
-            n_nodes = len(nodes_in_level)
-            if n_nodes == 1:
-                x_positions = [0.5]
+            if lvl == 1:  # nivel raíz
+                pos[nodes_in_level[0]] = (0.5, 0)  # el nodo inicial en medio
             else:
-                x_positions = [i/(n_nodes-1) for i in range(n_nodes)]
-            for x, node in zip(x_positions, nodes_in_level):
-                pos[node] = (x, -lvl*y_gap)
-    
+                for node in nodes_in_level:
+                    parent = parent_of[node]  # parent_of debe guardar el padre de cada nodo único
+                    x_parent, y_parent = pos[parent]
+                    siblings = [n for n in levels[lvl] if parent_of[n]==parent]
+                    n_siblings = len(siblings)
+                    if n_siblings == 1:
+                        pos[node] = (x_parent, y_parent - y_gap)
+                    else:
+                        idx = siblings.index(node)
+                        width = 0.5  # ancho máximo que ocupan los hijos
+                        start_x = x_parent - width/2
+                        dx = width / max(n_siblings-1, 1)
+                        pos[node] = (start_x + idx*dx, y_parent - y_gap)
+
         # Dibujar
         fig, ax = plt.subplots(figsize=(14,8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
