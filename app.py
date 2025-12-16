@@ -247,10 +247,11 @@ else:
         node_colors = {}
         levels = {}  # nivel -> lista de nodos
         pos = {}
-        node_count = {}
     
-        # --- Nodo inicial ---
-        start_node = expansion_log[0][1]
+        node_count = {}  # contador de apariciones de cada letra
+    
+        # Nodo inicial
+        start_node = solution_path[0]
         node_count[start_node] = 1
         root_unique = f"{start_node}_1"
         G_tree.add_node(root_unique)
@@ -258,51 +259,42 @@ else:
         node_colors[root_unique] = 'lightgreen'
         levels[1] = [root_unique]
     
-        green_unique = root_unique
-        green_index = 0
+        green_index = 1  # siguiente nodo verde a expandir en solution_path
+        green_nodes_queue = [root_unique]
+    
         y_gap = 1.5
+        current_level = 2
     
-        for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            if step == 1:
+        while green_nodes_queue:
+            parent_unique = green_nodes_queue.pop(0)
+            parent_letter = parent_unique.split("_")[0]
+    
+            # Buscar step correspondiente en expansion_log
+            step_data = next((s for s in expansion_log if s[1] == parent_letter), None)
+            if not step_data:
                 continue
+            _, _, gcur, hcur, fcur, neighbors, _, _ = step_data
     
-            # Nodo actual
-            node_count[current] = node_count.get(current, 0) + 1
-            current_unique = f"{current}_{node_count[current]}"
-            G_tree.add_node(current_unique)
-            node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
+            levels[current_level] = []
     
-            # Determinar si es verde
-            is_green = green_index + 1 < len(solution_path) and current == solution_path[green_index + 1]
-            if is_green:
-                node_colors[current_unique] = 'lightgreen'
-                green_unique = current_unique
-                green_index += 1
-            else:
-                node_colors[current_unique] = 'lightgray'
+            for n in neighbors:
+                node_count[n] = node_count.get(n, 0) + 1
+                child_unique = f"{n}_{node_count[n]}"
+                G_tree.add_node(child_unique)
+                node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
+                # verde solo si es el siguiente en solution_path
+                if green_index < len(solution_path) and n == solution_path[green_index]:
+                    node_colors[child_unique] = 'lightgreen'
+                    green_nodes_queue.append(child_unique)
+                    green_index += 1
+                else:
+                    node_colors[child_unique] = 'lightgray'
+                G_tree.add_edge(parent_unique, child_unique)
+                levels[current_level].append(child_unique)
     
-            # Expandir hijos SOLO si es verde o root
-            if is_green or step == 2:
-                level = green_index + 2
-                if level not in levels:
-                    levels[level] = []
+            current_level += 1
     
-                for n in neighbors:
-                    node_count[n] = node_count.get(n, 0) + 1
-                    child_unique = f"{n}_{node_count[n]}"
-                    G_tree.add_node(child_unique)
-                    node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-    
-                    # Verde si es el siguiente del path
-                    if green_index + 1 < len(solution_path) and n == solution_path[green_index + 1]:
-                        node_colors[child_unique] = 'lightgreen'
-                    else:
-                        node_colors[child_unique] = 'lightgray'
-    
-                    G_tree.add_edge(current_unique, child_unique)
-                    levels[level].append(child_unique)
-    
-        # --- Asignar posiciones centradas por nivel ---
+        # Calcular posiciones centradas por nivel
         for lvl, nodes_in_level in levels.items():
             n_nodes = len(nodes_in_level)
             if n_nodes == 1:
@@ -312,12 +304,7 @@ else:
             for x, node in zip(x_positions, nodes_in_level):
                 pos[node] = (x, -lvl*y_gap)
     
-        # --- Asegurarnos de que todos los nodos del grafo tengan posición ---
-        for n in G_tree.nodes():
-            if n not in pos:
-                pos[n] = (0.5, -len(levels)*y_gap)  # fallback abajo
-    
-        # --- Dibujar ---
+        # Dibujar
         fig, ax = plt.subplots(figsize=(14,8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
         for n in G_tree.nodes():
@@ -332,6 +319,7 @@ else:
             )
         ax.axis('off')
         st.pyplot(fig)
+
 
     
     
