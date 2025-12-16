@@ -243,63 +243,45 @@ else:
         import networkx as nx
         import matplotlib.pyplot as plt
     
-        # Grafo del árbol
         G_tree = nx.DiGraph()
-        node_positions = {}   # nodo único -> (x, y)
-        node_labels = {}      # nodo único -> texto
-        node_colors = {}      # nodo único -> color
+        node_labels = {}
+        node_colors = {}
+        pos = {}
+        level_nodes = {}  # paso -> lista de nodos
     
-        # Contadores para hacer nodos únicos
         node_count = {}
     
-        # Recorrer el log y crear nodos únicos
+        # Crear nodos únicos y edges
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            # nodo padre único
             node_count[current] = node_count.get(current, 0) + 1
-            parent_unique = f"{current}_{node_count[current]}"
-            G_tree.add_node(parent_unique)
-            node_labels[parent_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
-            node_colors[parent_unique] = 'lightgreen' if current in solution_path else 'lightgray'
+            current_unique = f"{current}_{node_count[current]}"
+            G_tree.add_node(current_unique)
+            node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
+            node_colors[current_unique] = 'lightgreen' if current in solution_path else 'lightgray'
+            level_nodes.setdefault(step, []).append(current_unique)
     
-            # crear nodos hijos únicos y aristas
             for n in neighbors:
                 node_count[n] = node_count.get(n, 0) + 1
-                child_unique = f"{n}_{node_count[n]}"
-                G_tree.add_node(child_unique)
-                G_tree.add_edge(parent_unique, child_unique)
-                node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-                node_colors[child_unique] = 'lightgreen' if n in solution_path else 'lightgray'
+                neighbor_unique = f"{n}_{node_count[n]}"
+                G_tree.add_node(neighbor_unique)
+                G_tree.add_edge(current_unique, neighbor_unique)
+                node_labels[neighbor_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
+                node_colors[neighbor_unique] = 'lightgreen' if n in solution_path else 'lightgray'
+                level_nodes.setdefault(step+1, []).append(neighbor_unique)
     
-        # -------------------------
-        # Layout manual por filas
-        # -------------------------
-        levels_dict = {}  # nivel -> lista de nodos
-        for idx, (step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes) in enumerate(expansion_log, 1):
-            # nodo padre
-            parent_unique = f"{current}_{node_count[current] - len(neighbors)}"
-            levels_dict.setdefault(step, []).append(parent_unique)
-            # hijos
-            for n in neighbors:
-                child_unique = f"{n}_{node_count[n]}"
-                levels_dict.setdefault(step+1, []).append(child_unique)
-    
-        # Posiciones centradas
-        pos = {}
-        for level, nodes_in_level in levels_dict.items():
-            n_nodes = len(nodes_in_level)
+        # Asignar posiciones centradas por nivel
+        for step, nodes in level_nodes.items():
+            n_nodes = len(nodes)
             if n_nodes == 1:
-                x_positions = [0.5]
+                xs = [0.5]
             else:
-                x_positions = [i/(n_nodes-1) for i in range(n_nodes)]
-            for x, node in zip(x_positions, nodes_in_level):
-                pos[node] = (x, -level)  # fila superior y=0, hacia abajo
+                xs = [i/(n_nodes-1) for i in range(n_nodes)]
+            for x, node in zip(xs, nodes):
+                pos[node] = (x, -step)  # filas hacia abajo
     
-        # -------------------------
         # Dibujar
-        # -------------------------
         fig, ax = plt.subplots(figsize=(14,8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
-    
         for n in G_tree.nodes():
             x, y = pos[n]
             ax.text(
@@ -310,7 +292,6 @@ else:
                           facecolor=node_colors[n],
                           edgecolor='black')
             )
-    
         ax.axis('off')
         st.pyplot(fig)
 
