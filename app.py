@@ -251,27 +251,25 @@ else:
         pos = {}
     
         # Nodo inicial
-        start_node = expansion_log[0][1]  # current del primer paso
-        root_unique = f"{start_node}_1"
+        start_node = expansion_log[0][1]
         node_count = {start_node: 1}
+        root_unique = f"{start_node}_1"
         G_tree.add_node(root_unique)
         node_labels[root_unique] = f"{start_node}\ng={g_vals[start_node]:.0f}\nh={h_vals[start_node]:.0f}\nf={f_vals[start_node]:.0f}"
-        node_colors[root_unique] = 'lightgreen' if start_node in solution_path else 'lightgray'
+        node_colors[root_unique] = 'lightgreen'
         levels[1] = [root_unique]
     
-        # Mantener referencia del nodo elegido en cada paso
         current_green = root_unique
-        green_index = 0  # índice del nodo escogido en solution_path
-    
+        green_index = 0
         y_gap = 1.5
+    
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            # Nodo actual único
+            # Nodo actual
             node_count[current] = node_count.get(current, 0) + 1
             current_unique = f"{current}_{node_count[current]}"
             if step != 1:
                 G_tree.add_node(current_unique)
                 node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
-                # gris si no es el nodo verde del path, verde si lo es
                 if current == solution_path[green_index]:
                     node_colors[current_unique] = 'lightgreen'
                     current_green = current_unique
@@ -293,7 +291,9 @@ else:
                 G_tree.add_edge(current_unique, neighbor_unique)
                 levels[level].append(neighbor_unique)
     
-        # Calcular posiciones centradas por nivel
+        # -------------------
+        # Posiciones: asignar a todos los nodos que faltan
+        # -------------------
         for lvl, nodes_in_level in levels.items():
             n_nodes = len(nodes_in_level)
             if n_nodes == 1:
@@ -302,6 +302,11 @@ else:
                 x_positions = [i/(n_nodes-1) for i in range(n_nodes)]
             for x, node in zip(x_positions, nodes_in_level):
                 pos[node] = (x, -lvl*y_gap)
+    
+        # Si algún nodo quedó sin posición, asignarle y=0 y x centrado
+        for n in G_tree.nodes():
+            if n not in pos:
+                pos[n] = (0.5, 0)
     
         # Dibujar
         fig, ax = plt.subplots(figsize=(14,8))
@@ -318,6 +323,7 @@ else:
             )
         ax.axis('off')
         st.pyplot(fig)
+
 
     
     
