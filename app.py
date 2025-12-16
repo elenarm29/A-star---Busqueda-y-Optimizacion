@@ -81,17 +81,17 @@ else:
         "Selecciona una heurística",
         ["Arco más corto × costo más barato", "Costo uniforme (h=0)"]
     )
-    
-    def heuristic(node, graph):
-        if heur_option == "Costo uniforme (h=0)":
-            return 0
-        elif heur_option == "Arco más corto × costo más barato":
-            outgoing = graph.out_edges(node, data=True)
-            if not outgoing:
-                return 0
-            min_km = min(attrs["km"] for _, _, attrs in outgoing)
-            return min_km * 2
+
+    def heuristic(node, graph, closed):
+    outgoing = [
+        attrs["km"]
+        for _, n, attrs in graph.out_edges(node, data=True)
+        if n not in closed
+    ]
+    if not outgoing:
         return 0
+    return min(outgoing) * 2
+
     
     if heur_option == "Costo uniforme (h=0)":
         st.caption("Heurística nula: el algoritmo se comporta como Dijkstra.")
