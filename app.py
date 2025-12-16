@@ -238,7 +238,6 @@ else:
     
     #     ax.axis('off')
     #     st.pyplot(fig)
-
     def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
         import networkx as nx
         import matplotlib.pyplot as plt
@@ -248,10 +247,9 @@ else:
         node_colors = {}
         levels = {}  # nivel -> lista de nodos
         pos = {}
+        node_count = {}
     
-        node_count = {}  # contar cuántas veces aparece cada nodo
-    
-        # Nodo inicial
+        # --- Nodo inicial ---
         start_node = expansion_log[0][1]
         node_count[start_node] = 1
         root_unique = f"{start_node}_1"
@@ -260,53 +258,51 @@ else:
         node_colors[root_unique] = 'lightgreen'
         levels[1] = [root_unique]
     
-        # Nodo verde actual que vamos a expandir
         green_unique = root_unique
         green_index = 0
-    
         y_gap = 1.5
     
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            # Evitar procesar el primer nodo, ya está en el root
             if step == 1:
                 continue
     
-            # Cada nodo actual
+            # Nodo actual
             node_count[current] = node_count.get(current, 0) + 1
             current_unique = f"{current}_{node_count[current]}"
-    
-            # Determinar si es el nodo verde que seguimos en solution_path
-            is_green = False
-            if green_index + 1 < len(solution_path) and current == solution_path[green_index + 1]:
-                is_green = True
-                green_unique = current_unique
-                green_index += 1
-    
             G_tree.add_node(current_unique)
             node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
-            node_colors[current_unique] = 'lightgreen' if is_green else 'lightgray'
     
-            # Agregar nodos hijos SOLO si es verde
-            if is_green or step == 2:  # primer paso: root expande siempre
+            # Determinar si es verde
+            is_green = green_index + 1 < len(solution_path) and current == solution_path[green_index + 1]
+            if is_green:
+                node_colors[current_unique] = 'lightgreen'
+                green_unique = current_unique
+                green_index += 1
+            else:
+                node_colors[current_unique] = 'lightgray'
+    
+            # Expandir hijos SOLO si es verde o root
+            if is_green or step == 2:
                 level = green_index + 2
                 if level not in levels:
                     levels[level] = []
+    
                 for n in neighbors:
                     node_count[n] = node_count.get(n, 0) + 1
                     child_unique = f"{n}_{node_count[n]}"
                     G_tree.add_node(child_unique)
                     node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-                    
-                    # Solo marcar verde si hay un siguiente nodo disponible en solution_path
+    
+                    # Verde si es el siguiente del path
                     if green_index + 1 < len(solution_path) and n == solution_path[green_index + 1]:
                         node_colors[child_unique] = 'lightgreen'
                     else:
                         node_colors[child_unique] = 'lightgray'
-                    
+    
                     G_tree.add_edge(current_unique, child_unique)
                     levels[level].append(child_unique)
     
-        # Posiciones centradas por nivel
+        # --- Asignar posiciones centradas por nivel ---
         for lvl, nodes_in_level in levels.items():
             n_nodes = len(nodes_in_level)
             if n_nodes == 1:
@@ -316,7 +312,12 @@ else:
             for x, node in zip(x_positions, nodes_in_level):
                 pos[node] = (x, -lvl*y_gap)
     
-        # Dibujar
+        # --- Asegurarnos de que todos los nodos del grafo tengan posición ---
+        for n in G_tree.nodes():
+            if n not in pos:
+                pos[n] = (0.5, -len(levels)*y_gap)  # fallback abajo
+    
+        # --- Dibujar ---
         fig, ax = plt.subplots(figsize=(14,8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
         for n in G_tree.nodes():
