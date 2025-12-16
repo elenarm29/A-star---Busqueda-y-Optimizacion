@@ -263,18 +263,20 @@ else:
                 G_tree.add_edge(unique_current, unique_neighbor)
     
         # Layout jerárquico
-        def hierarchy_pos(G, root, width=1., vert_gap=1., xcenter=0.5, pos=None):
+
+        def hierarchy_pos(G, root, width=1., vert_gap=1., xcenter=0.5, pos=None, parent=None):
             if pos is None:
-                pos = {root: (xcenter, 0)}
+                pos = {}
+            pos[root] = (xcenter, pos[parent][1] - vert_gap if parent else 0)
             children = list(G.successors(root))
             if len(children) != 0:
                 dx = width / len(children)
                 nextx = xcenter - width/2 - dx/2
                 for child in children:
                     nextx += dx
-                    pos[child] = (nextx, pos[root][1] - vert_gap)
-                    pos = hierarchy_pos(G, child, width=dx, vert_gap=vert_gap, xcenter=nextx, pos=pos)
+                    pos = hierarchy_pos(G, child, width=dx, vert_gap=vert_gap, xcenter=nextx, pos=pos, parent=root)
             return pos
+
     
         root_unique = "A_1"  # suponiendo que la raíz siempre es A
         pos = hierarchy_pos(G_tree, root_unique, width=1.5, vert_gap=1.2, xcenter=0.5)
