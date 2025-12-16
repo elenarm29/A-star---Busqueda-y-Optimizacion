@@ -267,7 +267,13 @@ else:
     
         while green_nodes_queue:
             parent_unique = green_nodes_queue.pop(0)
+
             parent_letter = parent_unique.split("_")[0]
+            
+            # Si el nodo padre es el último de solution_path, no expandir hijos
+            if parent_letter == solution_path[-1]:
+                continue  # saltar expansión, no añadimos hijos
+
     
             # Buscar step correspondiente en expansion_log
             step_data = next((s for s in expansion_log if s[1] == parent_letter), None)
