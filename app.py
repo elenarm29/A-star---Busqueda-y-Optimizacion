@@ -239,6 +239,7 @@ else:
     #     ax.axis('off')
     #     st.pyplot(fig)
 
+       
     def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
         import networkx as nx
         import matplotlib.pyplot as plt
@@ -246,38 +247,61 @@ else:
         G_tree = nx.DiGraph()
         node_labels = {}
         node_colors = {}
+        levels = {}  # nivel -> lista de nodos
         pos = {}
-        level_nodes = {}  # paso -> lista de nodos
     
-        node_count = {}
+        # Nodo inicial
+        start_node = expansion_log[0][1]  # current del primer paso
+        root_unique = f"{start_node}_1"
+        node_count = {start_node: 1}
+        G_tree.add_node(root_unique)
+        node_labels[root_unique] = f"{start_node}\ng={g_vals[start_node]:.0f}\nh={h_vals[start_node]:.0f}\nf={f_vals[start_node]:.0f}"
+        node_colors[root_unique] = 'lightgreen' if start_node in solution_path else 'lightgray'
+        levels[1] = [root_unique]
     
-        # Crear nodos únicos y edges
+        # Mantener referencia del nodo elegido en cada paso
+        current_green = root_unique
+        green_index = 0  # índice del nodo escogido en solution_path
+    
+        y_gap = 1.5
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
+            # Nodo actual único
             node_count[current] = node_count.get(current, 0) + 1
             current_unique = f"{current}_{node_count[current]}"
-            G_tree.add_node(current_unique)
-            node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
-            node_colors[current_unique] = 'lightgreen' if current in solution_path else 'lightgray'
-            level_nodes.setdefault(step, []).append(current_unique)
+            if step != 1:
+                G_tree.add_node(current_unique)
+                node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
+                # gris si no es el nodo verde del path, verde si lo es
+                if current == solution_path[green_index]:
+                    node_colors[current_unique] = 'lightgreen'
+                    current_green = current_unique
+                    green_index += 1
+                else:
+                    node_colors[current_unique] = 'lightgray'
+    
+            # Agregar vecinos como nodos únicos
+            level = green_index + 1
+            if level not in levels:
+                levels[level] = []
     
             for n in neighbors:
                 node_count[n] = node_count.get(n, 0) + 1
                 neighbor_unique = f"{n}_{node_count[n]}"
                 G_tree.add_node(neighbor_unique)
-                G_tree.add_edge(current_unique, neighbor_unique)
                 node_labels[neighbor_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-                node_colors[neighbor_unique] = 'lightgreen' if n in solution_path else 'lightgray'
-                level_nodes.setdefault(step+1, []).append(neighbor_unique)
+                node_colors[neighbor_unique] = 'lightgreen' if n == solution_path[green_index] else 'lightgray'
+                G_tree.add_edge(current_unique, neighbor_unique)
+                levels[level].append(neighbor_unique)
     
-        # Asignar posiciones centradas por nivel
-        for step, nodes in level_nodes.items():
-            n_nodes = len(nodes)
+        # Calcular posiciones centradas por nivel
+        for lvl, nodes_in_level in levels.items():
+            n_nodes = len(nodes_in_level)
             if n_nodes == 1:
-                xs = [0.5]
+                x_positions = [0.5]
             else:
-                xs = [i/(n_nodes-1) for i in range(n_nodes)]
-            for x, node in zip(xs, nodes):
-                pos[node] = (x, -step)  # filas hacia abajo
+                x_positions = [i/(n_nodes-1) for i in range(n_nodes)]
+            for x, node in zip(x_positions, nodes_in_level):
+                pos[node] = (x, -lvl*y_gap)
     
         # Dibujar
         fig, ax = plt.subplots(figsize=(14,8))
@@ -295,9 +319,6 @@ else:
         ax.axis('off')
         st.pyplot(fig)
 
-
-    
-    
     
     
     
