@@ -311,16 +311,20 @@ else:
         # Dibujar
         fig, ax = plt.subplots(figsize=(14,8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
+
         for n in G_tree.nodes():
             x, y = pos[n]
+            label = node_labels.get(n, n)  # Si no existe, usamos solo el nombre del nodo
+            color = node_colors.get(n, 'lightgray')  # Si no existe, gris
             ax.text(
                 x, y,
-                node_labels[n],
+                label,
                 ha='center', va='center', fontsize=10, fontweight='bold',
                 bbox=dict(boxstyle="round,pad=0.6,rounding_size=0.3",
-                          facecolor=node_colors[n],
+                          facecolor=color,
                           edgecolor='black')
             )
+            
         ax.axis('off')
         st.pyplot(fig)
 
