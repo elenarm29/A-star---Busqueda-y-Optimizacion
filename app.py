@@ -247,53 +247,57 @@ else:
         G_tree = nx.DiGraph()
         node_labels = {}
         node_colors = {}
-        levels = {}  # nivel -> lista de nodos
         pos = {}
+        levels = {}  # nivel -> lista de nodos
     
-        # Nodo inicial
+        node_count = {}  # contador de nodos únicos
+        green_index = 0  # índice del nodo escogido en solution_path
+    
+        # --- Nodo inicial ---
         start_node = expansion_log[0][1]
-        node_count = {start_node: 1}
+        node_count[start_node] = 1
         root_unique = f"{start_node}_1"
         G_tree.add_node(root_unique)
         node_labels[root_unique] = f"{start_node}\ng={g_vals[start_node]:.0f}\nh={h_vals[start_node]:.0f}\nf={f_vals[start_node]:.0f}"
         node_colors[root_unique] = 'lightgreen'
         levels[1] = [root_unique]
-    
         current_green = root_unique
-        green_index = 0
-        y_gap = 1.5
     
+        # --- Iterar por cada paso del log ---
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            # Nodo actual
+            # solo expandir los hijos del nodo verde actual
+            if current != solution_path[green_index]:
+                continue
+    
+            # Nodo actual único (verde)
             node_count[current] = node_count.get(current, 0) + 1
             current_unique = f"{current}_{node_count[current]}"
-            if step != 1:
+            if current_unique not in G_tree:
                 G_tree.add_node(current_unique)
                 node_labels[current_unique] = f"{current}\ng={gcur:.0f}\nh={hcur:.0f}\nf={fcur:.0f}"
-                if current == solution_path[green_index]:
-                    node_colors[current_unique] = 'lightgreen'
-                    current_green = current_unique
-                    green_index += 1
-                else:
-                    node_colors[current_unique] = 'lightgray'
+                node_colors[current_unique] = 'lightgreen'
+                levels.setdefault(green_index + 1, []).append(current_unique)
+            current_green = current_unique
     
             # Agregar vecinos como nodos únicos
-            level = green_index + 1
-            if level not in levels:
-                levels[level] = []
-    
+            level = green_index + 2
+            levels.setdefault(level, [])
             for n in neighbors:
                 node_count[n] = node_count.get(n, 0) + 1
                 neighbor_unique = f"{n}_{node_count[n]}"
                 G_tree.add_node(neighbor_unique)
                 node_labels[neighbor_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-                node_colors[neighbor_unique] = 'lightgreen' if n == solution_path[green_index] else 'lightgray'
+                # verde si es el siguiente en solution_path, gris si no
+                if green_index + 1 < len(solution_path) and n == solution_path[green_index + 1]:
+                    node_colors[neighbor_unique] = 'lightgreen'
+                    green_index += 1
+                else:
+                    node_colors[neighbor_unique] = 'lightgray'
                 G_tree.add_edge(current_unique, neighbor_unique)
                 levels[level].append(neighbor_unique)
     
-        # -------------------
-        # Posiciones: asignar a todos los nodos que faltan
-        # -------------------
+        # --- Calcular posiciones centradas por nivel ---
+        y_gap = 1.5
         for lvl, nodes_in_level in levels.items():
             n_nodes = len(nodes_in_level)
             if n_nodes == 1:
@@ -303,28 +307,19 @@ else:
             for x, node in zip(x_positions, nodes_in_level):
                 pos[node] = (x, -lvl*y_gap)
     
-        # Si algún nodo quedó sin posición, asignarle y=0 y x centrado
-        for n in G_tree.nodes():
-            if n not in pos:
-                pos[n] = (0.5, 0)
-    
-        # Dibujar
+        # --- Dibujar ---
         fig, ax = plt.subplots(figsize=(14,8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
-
         for n in G_tree.nodes():
             x, y = pos[n]
-            label = node_labels.get(n, n)  # Si no existe, usamos solo el nombre del nodo
-            color = node_colors.get(n, 'lightgray')  # Si no existe, gris
             ax.text(
                 x, y,
-                label,
+                node_labels[n],
                 ha='center', va='center', fontsize=10, fontweight='bold',
                 bbox=dict(boxstyle="round,pad=0.6,rounding_size=0.3",
-                          facecolor=color,
+                          facecolor=node_colors[n],
                           edgecolor='black')
             )
-            
         ax.axis('off')
         st.pyplot(fig)
 
