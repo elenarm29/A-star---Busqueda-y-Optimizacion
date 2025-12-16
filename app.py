@@ -296,7 +296,13 @@ else:
                     child_unique = f"{n}_{node_count[n]}"
                     G_tree.add_node(child_unique)
                     node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
-                    node_colors[child_unique] = 'lightgreen' if n == solution_path[green_index + 1] else 'lightgray'
+                    
+                    # Solo marcar verde si hay un siguiente nodo disponible en solution_path
+                    if green_index + 1 < len(solution_path) and n == solution_path[green_index + 1]:
+                        node_colors[child_unique] = 'lightgreen'
+                    else:
+                        node_colors[child_unique] = 'lightgray'
+                    
                     G_tree.add_edge(current_unique, child_unique)
                     levels[level].append(child_unique)
     
@@ -325,7 +331,6 @@ else:
             )
         ax.axis('off')
         st.pyplot(fig)
-
 
     
     
