@@ -239,61 +239,72 @@ else:
     #     ax.axis('off')
     #     st.pyplot(fig)
 
-
     def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
+        import networkx as nx
+        import matplotlib.pyplot as plt
+    
+        # Construir el árbol de expansión
         G_tree = nx.DiGraph()
-        node_count = {}  # Contador de veces que aparece cada nodo original
-        node_map = {}    # Mapping: nodo original + índice -> nodo único
-        
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            # Crear nodo único
-            node_count[current] = node_count.get(current, 0) + 1
-            unique_current = f"{current}_{node_count[current]}"
-            node_map[(current, node_count[current])] = unique_current
-    
-            # Agregar nodo al grafo
-            G_tree.add_node(unique_current, label=current, g=gcur, h=hcur, f=fcur, in_solution=current in solution_path)
-    
-            # Agregar aristas a vecinos únicos
+            G_tree.add_node(current, g=gcur, h=hcur, f=fcur, in_solution=current in solution_path)
             for n in neighbors:
-                node_count[n] = node_count.get(n, 0) + 1
-                unique_neighbor = f"{n}_{node_count[n]}"
-                node_map[(n, node_count[n])] = unique_neighbor
-                G_tree.add_node(unique_neighbor, label=n, g=g_vals.get(n,0), h=h_vals.get(n,0), f=f_vals.get(n,0), in_solution=n in solution_path)
-                G_tree.add_edge(unique_current, unique_neighbor)
+                G_tree.add_node(n, g=g_vals.get(n,0), h=h_vals.get(n,0), f=f_vals.get(n,0), in_solution=n in solution_path)
+                G_tree.add_edge(current, n)
     
-        # Layout jerárquico
-
-        def hierarchy_pos(G, root, width=1., vert_gap=1., xcenter=0.5, pos=None, parent=None):
-            if pos is None:
-                pos = {}
-            pos[root] = (xcenter, pos[parent][1] - vert_gap if parent else 0)
-            children = list(G.successors(root))
-            if len(children) != 0:
-                dx = width / len(children)
-                nextx = xcenter - width/2 - dx/2
-                for child in children:
-                    nextx += dx
-                    pos = hierarchy_pos(G, child, width=dx, vert_gap=vert_gap, xcenter=nextx, pos=pos, parent=root)
-            return pos
-
+        # -------------------------
+        # Layout nivel por nivel
+        # -------------------------
+        levels = {}  # nodo -> nivel
+        visited = set()
+        from collections import deque, defaultdict
     
-        root_unique = "A_1"  # suponiendo que la raíz siempre es A
-        pos = hierarchy_pos(G_tree, root_unique, width=1.5, vert_gap=1.2, xcenter=0.5)
+        root = solution_path[0]
+        queue = deque([(root, 0)])
+        levels_dict = defaultdict(list)
     
+        while queue:
+            node, level = queue.popleft()
+            if node in visited:
+                continue
+            visited.add(node)
+            levels[node] = level
+            levels_dict[level].append(node)
+            for child in G_tree.successors(node):
+                queue.append((child, level+1))
+    
+        # asignar posiciones x centradas por nivel
+        pos = {}
+        for level, nodes_in_level in levels_dict.items():
+            n = len(nodes_in_level)
+            if n == 1:
+                x_positions = [0.5]
+            else:
+                x_positions = [i/(n-1) for i in range(n)]
+            for x, node in zip(x_positions, nodes_in_level):
+                pos[node] = (x, -level)  # y=-level para que la raíz esté arriba
+    
+        # -------------------------
         # Dibujar
-        fig, ax = plt.subplots(figsize=(14,8))
+        # -------------------------
+        fig, ax = plt.subplots(figsize=(14, 8))
         nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
-        for n in G_tree.nodes(data=True):
-            x, y = pos[n[0]]
-            ax.text(x, y,
-                    f"{n[1]['label']}\ng={n[1]['g']:.0f}\nh={n[1]['h']:.0f}\nf={n[1]['f']:.0f}",
-                    ha='center', va='center', fontsize=10, fontweight='bold',
-                    bbox=dict(boxstyle="round,pad=0.6,rounding_size=0.3",
-                              facecolor='lightgreen' if n[1]['in_solution'] else 'lightgray',
-                              edgecolor='black'))
+    
+        for n, data in G_tree.nodes(data=True):
+            x, y = pos[n]
+            ax.text(
+                x, y,
+                f"{n}\ng={data['g']:.0f}\nh={data['h']:.0f}\nf={data['f']:.0f}",
+                ha='center', va='center', fontsize=10, fontweight='bold',
+                bbox=dict(
+                    boxstyle="round,pad=0.6,rounding_size=0.3",
+                    facecolor='lightgreen' if data['in_solution'] else 'lightgray',
+                    edgecolor='black'
+                )
+            )
+    
         ax.axis('off')
         st.pyplot(fig)
+
 
     
     
