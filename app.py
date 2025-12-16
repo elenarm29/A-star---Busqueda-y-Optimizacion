@@ -239,7 +239,7 @@ else:
     #     ax.axis('off')
     #     st.pyplot(fig)
 
-   def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
+    def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
         import networkx as nx
         import matplotlib.pyplot as plt
     
