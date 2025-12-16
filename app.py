@@ -171,29 +171,98 @@ else:
     # --------------------------
     # Dibujar árbol de expansión por iteración
     # --------------------------
+    # def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
+    #     import matplotlib.pyplot as plt
+    #     import networkx as nx
+    
+    #     # Construir grafo del árbol
+    #     G_tree = nx.DiGraph()
+    #     valid_nodes = set()
+    #     goal_node = solution_path[-1]
+    
+    #     for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
+    #         # Ignorar nodos hijos de goal_node
+    #         if current in valid_nodes or current == goal_node or (not G_tree.has_node(goal_node)):
+    #             valid_nodes.add(current)
+    #             for n in neighbors:
+    #                 if current == goal_node:
+    #                     continue  # No expandir hijos del nodo final
+    #                 valid_nodes.add(n)
+    #                 G_tree.add_edge(current, n)
+    
+    #     # Filtrar solo nodos válidos
+    #     G_tree = G_tree.subgraph(valid_nodes).copy()
+    
+    #     # Layout jerárquico tipo árbol
+    #     def hierarchy_pos(G, root, width=1., vert_gap=1., xcenter=0.5, pos=None):
+    #         if pos is None:
+    #             pos = {root: (xcenter, 0)}
+    #         children = list(G.successors(root))
+    #         if len(children) != 0:
+    #             dx = width / len(children)
+    #             nextx = xcenter - width/2 - dx/2
+    #             for child in children:
+    #                 nextx += dx
+    #                 pos[child] = (nextx, pos[root][1] - vert_gap)
+    #                 pos = hierarchy_pos(G, child, width=dx, vert_gap=vert_gap,
+    #                                     xcenter=nextx, pos=pos)
+    #         return pos
+    
+    #     root = solution_path[0]
+    #     pos = hierarchy_pos(G_tree, root, width=1.5, vert_gap=1.2, xcenter=0.5)
+    
+    #     # Dibujar edges
+    #     fig, ax = plt.subplots(figsize=(14, 8))
+    #     # nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=8,
+    #     #                        connectionstyle='arc3,rad=0.0', ax=ax)
+    #     # Dibujar edges como líneas rectas con flecha
+    #     nx.draw_networkx_edges(
+    #         G_tree, pos,
+    #         arrows=True,
+    #         arrowstyle='-|>',
+    #         arrowsize=10,
+    #         edge_color='black',
+    #         width=1.0,
+    #         ax=ax
+    #     )
+    
+    
+    #     # Dibujar solo rectángulos con bbox, nada de círculos
+    #     for n in G_tree.nodes():
+    #         x, y = pos[n]
+    #         ax.text(x, y, f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}",
+    #                 ha='center', va='center', fontsize=10, fontweight='bold',
+    #                 bbox=dict(boxstyle="round,pad=0.6,rounding_size=0.3",
+    #                           facecolor='lightgreen' if n in solution_path else 'lightgray',
+    #                           edgecolor='black'))
+    
+    #     ax.axis('off')
+    #     st.pyplot(fig)
+
+
     def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
-        import matplotlib.pyplot as plt
-        import networkx as nx
-    
-        # Construir grafo del árbol
         G_tree = nx.DiGraph()
-        valid_nodes = set()
-        goal_node = solution_path[-1]
-    
+        node_count = {}  # Contador de veces que aparece cada nodo original
+        node_map = {}    # Mapping: nodo original + índice -> nodo único
+        
         for step, current, gcur, hcur, fcur, neighbors, open_nodes, closed_nodes in expansion_log:
-            # Ignorar nodos hijos de goal_node
-            if current in valid_nodes or current == goal_node or (not G_tree.has_node(goal_node)):
-                valid_nodes.add(current)
-                for n in neighbors:
-                    if current == goal_node:
-                        continue  # No expandir hijos del nodo final
-                    valid_nodes.add(n)
-                    G_tree.add_edge(current, n)
+            # Crear nodo único
+            node_count[current] = node_count.get(current, 0) + 1
+            unique_current = f"{current}_{node_count[current]}"
+            node_map[(current, node_count[current])] = unique_current
     
-        # Filtrar solo nodos válidos
-        G_tree = G_tree.subgraph(valid_nodes).copy()
+            # Agregar nodo al grafo
+            G_tree.add_node(unique_current, label=current, g=gcur, h=hcur, f=fcur, in_solution=current in solution_path)
     
-        # Layout jerárquico tipo árbol
+            # Agregar aristas a vecinos únicos
+            for n in neighbors:
+                node_count[n] = node_count.get(n, 0) + 1
+                unique_neighbor = f"{n}_{node_count[n]}"
+                node_map[(n, node_count[n])] = unique_neighbor
+                G_tree.add_node(unique_neighbor, label=n, g=g_vals.get(n,0), h=h_vals.get(n,0), f=f_vals.get(n,0), in_solution=n in solution_path)
+                G_tree.add_edge(unique_current, unique_neighbor)
+    
+        # Layout jerárquico
         def hierarchy_pos(G, root, width=1., vert_gap=1., xcenter=0.5, pos=None):
             if pos is None:
                 pos = {root: (xcenter, 0)}
@@ -204,41 +273,26 @@ else:
                 for child in children:
                     nextx += dx
                     pos[child] = (nextx, pos[root][1] - vert_gap)
-                    pos = hierarchy_pos(G, child, width=dx, vert_gap=vert_gap,
-                                        xcenter=nextx, pos=pos)
+                    pos = hierarchy_pos(G, child, width=dx, vert_gap=vert_gap, xcenter=nextx, pos=pos)
             return pos
     
-        root = solution_path[0]
-        pos = hierarchy_pos(G_tree, root, width=1.5, vert_gap=1.2, xcenter=0.5)
+        root_unique = "A_1"  # suponiendo que la raíz siempre es A
+        pos = hierarchy_pos(G_tree, root_unique, width=1.5, vert_gap=1.2, xcenter=0.5)
     
-        # Dibujar edges
-        fig, ax = plt.subplots(figsize=(14, 8))
-        # nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=8,
-        #                        connectionstyle='arc3,rad=0.0', ax=ax)
-        # Dibujar edges como líneas rectas con flecha
-        nx.draw_networkx_edges(
-            G_tree, pos,
-            arrows=True,
-            arrowstyle='-|>',
-            arrowsize=10,
-            edge_color='black',
-            width=1.0,
-            ax=ax
-        )
-    
-    
-        # Dibujar solo rectángulos con bbox, nada de círculos
-        for n in G_tree.nodes():
-            x, y = pos[n]
-            ax.text(x, y, f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}",
+        # Dibujar
+        fig, ax = plt.subplots(figsize=(14,8))
+        nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
+        for n in G_tree.nodes(data=True):
+            x, y = pos[n[0]]
+            ax.text(x, y,
+                    f"{n[1]['label']}\ng={n[1]['g']:.0f}\nh={n[1]['h']:.0f}\nf={n[1]['f']:.0f}",
                     ha='center', va='center', fontsize=10, fontweight='bold',
                     bbox=dict(boxstyle="round,pad=0.6,rounding_size=0.3",
-                              facecolor='lightgreen' if n in solution_path else 'lightgray',
+                              facecolor='lightgreen' if n[1]['in_solution'] else 'lightgray',
                               edgecolor='black'))
-    
         ax.axis('off')
         st.pyplot(fig)
-    
+
     
     
     
