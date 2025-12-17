@@ -241,133 +241,152 @@ else:
     
     #     ax.axis('off')
     #     st.pyplot(fig)
+
+    
     def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
-        import networkx as nx
-        import matplotlib.pyplot as plt
-    
-        G_tree = nx.DiGraph()
-        node_labels = {}
-        node_colors = {}
-        levels = {}  # nivel -> lista de nodos
-        pos = {}
-        parent_of = {}
-        expansion_id = {}  # letra -> número de expansión
-        expansion_id = 0  # contador global único
+    import networkx as nx
+    import matplotlib.pyplot as plt
 
-   
-        node_count = {}  # contador de apariciones de cada letra
+    G_tree = nx.DiGraph()
+    node_labels = {}
+    node_colors = {}
+    levels = {}          # nivel -> lista de nodos únicos
+    parent_of = {}       # hijo -> padre
+    pos = {}
 
-        for step, current, *_ in expansion_log:
-            if current not in expansion_id:
-                expansion_id[current] = step - 1  # para que el inicial sea (0)
+    # Contador global de expansión (único y creciente)
+    expansion_id = 0
 
-        # Nodo inicial
-        start_node = solution_path[0]
-        node_count[start_node] = 1
-        root_unique = f"{start_node}_1"
-        G_tree.add_node(root_unique)
-        node_labels[root_unique] = (
-            f"{start_node} ({expansion_id})\n"
-            f"g={g_vals[start_node]:.0f}\n"
-            f"h={h_vals[start_node]:.0f}\n"
-            f"f={f_vals[start_node]:.0f}"
-        )
-        expansion_id += 1
+    # Para permitir nodos repetidos con la misma letra
+    node_count = {}
 
+    # --------------------------
+    # Nodo inicial
+    # --------------------------
+    start_node = solution_path[0]
+    node_count[start_node] = 1
+    root_unique = f"{start_node}_1"
 
-        node_colors[root_unique] = 'lightgreen'
-        levels[1] = [root_unique]
-    
-        green_index = 1  # siguiente nodo verde a expandir en solution_path
-        green_nodes_queue = [root_unique]
-    
-        y_gap = 1.5
-        current_level = 2
-    
-        while green_nodes_queue:
-            parent_unique = green_nodes_queue.pop(0)
+    G_tree.add_node(root_unique)
+    node_labels[root_unique] = (
+        f"{start_node} ({expansion_id})\n"
+        f"g={g_vals[start_node]:.0f}\n"
+        f"h={h_vals[start_node]:.0f}\n"
+        f"f={f_vals[start_node]:.0f}"
+    )
+    node_colors[root_unique] = "lightgreen"
+    levels[1] = [root_unique]
 
-            parent_letter = parent_unique.split("_")[0]
-            
-            # Si el nodo padre es el último de solution_path, no expandir hijos
-            if parent_letter == solution_path[-1]:
-                continue  # saltar expansión, no añadimos hijos
+    expansion_id += 1
 
-    
-            # Buscar step correspondiente en expansion_log
-            step_data = next((s for s in expansion_log if s[1] == parent_letter), None)
-            if not step_data:
-                continue
-            _, _, gcur, hcur, fcur, neighbors, _, _ = step_data
-    
-            levels[current_level] = []
-    
-            for n in neighbors:
-                current_id = expansion_id
-                expansion_id += 1
+    # Cola de nodos verdes a expandir
+    green_index = 1
+    green_nodes_queue = [root_unique]
+    current_level = 2
+    y_gap = 1.5
 
-                node_count[n] = node_count.get(n, 0) + 1
-                child_unique = f"{n}_{node_count[n]}"
-                G_tree.add_node(child_unique)
-                exp_id = expansion_id.get(n, "")
-                node_labels[child_unique] = (
-                    f"{n} ({current_id})\n"
-                    f"g={g_vals.get(n,0):.0f}\n"
-                    f"h={h_vals.get(n,0):.0f}\n"
-                    f"f={f_vals.get(n,0):.0f}"
-                )
+    # --------------------------
+    # Construcción del árbol
+    # --------------------------
+    while green_nodes_queue:
+        parent_unique = green_nodes_queue.pop(0)
+        parent_letter = parent_unique.split("_")[0]
 
+        # Si es el nodo objetivo, NO se expande
+        if parent_letter == solution_path[-1]:
+            continue
 
-                if green_index < len(solution_path) and n == solution_path[green_index]:
-                    node_colors[child_unique] = 'lightgreen'
-                    green_nodes_queue.append(child_unique)
-                    green_index += 1
-                else:
-                    node_colors[child_unique] = 'lightgray'
-                G_tree.add_edge(parent_unique, child_unique)
-                parent_of[child_unique] = parent_unique  # <-- aquí guardamos el padre
-                levels[current_level].append(child_unique)
+        # Buscar su expansión en el log
+        step_data = next((s for s in expansion_log if s[1] == parent_letter), None)
+        if not step_data:
+            continue
 
-    
-            current_level += 1
-    
-        # Calcular posiciones centradas por nivel
-        # Calcular posiciones centradas respecto a los padres
-        pos = {}
-        y_gap = 1.5
-        for lvl, nodes_in_level in levels.items():
-            if lvl == 1:  # nivel raíz
-                pos[nodes_in_level[0]] = (0.5, 0)  # el nodo inicial en medio
-            else:
-                for node in nodes_in_level:
-                    parent = parent_of[node]  # parent_of debe guardar el padre de cada nodo único
-                    x_parent, y_parent = pos[parent]
-                    siblings = [n for n in levels[lvl] if parent_of[n]==parent]
-                    n_siblings = len(siblings)
-                    if n_siblings == 1:
-                        pos[node] = (x_parent, y_parent - y_gap)
-                    else:
-                        idx = siblings.index(node)
-                        width = 0.5  # ancho máximo que ocupan los hijos
-                        start_x = x_parent - width/2
-                        dx = width / max(n_siblings-1, 1)
-                        pos[node] = (start_x + idx*dx, y_parent - y_gap)
+        _, _, _, _, _, neighbors, _, _ = step_data
+        levels[current_level] = []
 
-        # Dibujar
-        fig, ax = plt.subplots(figsize=(14,8))
-        nx.draw_networkx_edges(G_tree, pos, arrows=True, arrowstyle='-|>', arrowsize=10, edge_color='black')
-        for n in G_tree.nodes():
-            x, y = pos[n]
-            ax.text(
-                x, y,
-                node_labels[n],
-                ha='center', va='center', fontsize=10, fontweight='bold',
-                bbox=dict(boxstyle="round,pad=0.6,rounding_size=0.3",
-                          facecolor=node_colors[n],
-                          edgecolor='black')
+        for n in neighbors:
+            # Crear identificador único del nodo
+            node_count[n] = node_count.get(n, 0) + 1
+            child_unique = f"{n}_{node_count[n]}"
+
+            G_tree.add_node(child_unique)
+
+            # Asignar número de expansión global
+            current_id = expansion_id
+            expansion_id += 1
+
+            node_labels[child_unique] = (
+                f"{n} ({current_id})\n"
+                f"g={g_vals.get(n,0):.0f}\n"
+                f"h={h_vals.get(n,0):.0f}\n"
+                f"f={f_vals.get(n,0):.0f}"
             )
-        ax.axis('off')
-        st.pyplot(fig)
+
+            # Verde solo si pertenece al camino solución
+            if green_index < len(solution_path) and n == solution_path[green_index]:
+                node_colors[child_unique] = "lightgreen"
+                green_nodes_queue.append(child_unique)
+                green_index += 1
+            else:
+                node_colors[child_unique] = "lightgray"
+
+            G_tree.add_edge(parent_unique, child_unique)
+            parent_of[child_unique] = parent_unique
+            levels[current_level].append(child_unique)
+
+        current_level += 1
+
+    # --------------------------
+    # Posiciones centradas respecto al padre
+    # --------------------------
+    for lvl, nodes_in_level in levels.items():
+        if lvl == 1:
+            pos[nodes_in_level[0]] = (0.5, 0)
+        else:
+            for node in nodes_in_level:
+                parent = parent_of[node]
+                x_parent, y_parent = pos[parent]
+                siblings = [n for n in nodes_in_level if parent_of[n] == parent]
+                n_siblings = len(siblings)
+
+                if n_siblings == 1:
+                    pos[node] = (x_parent, y_parent - y_gap)
+                else:
+                    idx = siblings.index(node)
+                    width = 0.5
+                    start_x = x_parent - width / 2
+                    dx = width / (n_siblings - 1)
+                    pos[node] = (start_x + idx * dx, y_parent - y_gap)
+
+    # --------------------------
+    # Dibujo
+    # --------------------------
+    fig, ax = plt.subplots(figsize=(14, 8))
+    nx.draw_networkx_edges(
+        G_tree, pos,
+        arrows=True,
+        arrowstyle='-|>',
+        arrowsize=10,
+        edge_color='black'
+    )
+
+    for n in G_tree.nodes():
+        x, y = pos[n]
+        ax.text(
+            x, y,
+            node_labels[n],
+            ha='center', va='center',
+            fontsize=10, fontweight='bold',
+            bbox=dict(
+                boxstyle="round,pad=0.6,rounding_size=0.3",
+                facecolor=node_colors[n],
+                edgecolor='black'
+            )
+        )
+
+    ax.axis('off')
+    st.pyplot(fig)
+
 
 
     
