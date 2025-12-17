@@ -251,16 +251,24 @@ else:
         levels = {}  # nivel -> lista de nodos
         pos = {}
         parent_of = {}
-
-    
+        expansion_id = {}  # letra -> número de expansión
+   
         node_count = {}  # contador de apariciones de cada letra
-    
+
+        for step, current, *_ in expansion_log:
+            if current not in expansion_id:
+                expansion_id[current] = step - 1  # para que el inicial sea (0)
+
         # Nodo inicial
         start_node = solution_path[0]
         node_count[start_node] = 1
         root_unique = f"{start_node}_1"
         G_tree.add_node(root_unique)
-        node_labels[root_unique] = f"{start_node}\ng={g_vals[start_node]:.0f}\nh={h_vals[start_node]:.0f}\nf={f_vals[start_node]:.0f}"
+        node_labels[root_unique] = f"{start_node} ({expansion_id[start_node]})\n" \
+                           f"g={g_vals[start_node]:.0f}\n" \
+                           f"h={h_vals[start_node]:.0f}\n" \
+                           f"f={f_vals[start_node]:.0f}"
+
         node_colors[root_unique] = 'lightgreen'
         levels[1] = [root_unique]
     
@@ -292,7 +300,12 @@ else:
                 node_count[n] = node_count.get(n, 0) + 1
                 child_unique = f"{n}_{node_count[n]}"
                 G_tree.add_node(child_unique)
-                node_labels[child_unique] = f"{n}\ng={g_vals.get(n,0):.0f}\nh={h_vals.get(n,0):.0f}\nf={f_vals.get(n,0):.0f}"
+                exp_id = expansion_id.get(n, "")
+                node_labels[child_unique] = f"{n} ({exp_id})\n" \
+                                            f"g={g_vals.get(n,0):.0f}\n" \
+                                            f"h={h_vals.get(n,0):.0f}\n" \
+                                            f"f={f_vals.get(n,0):.0f}"
+
                 if green_index < len(solution_path) and n == solution_path[green_index]:
                     node_colors[child_unique] = 'lightgreen'
                     green_nodes_queue.append(child_unique)
