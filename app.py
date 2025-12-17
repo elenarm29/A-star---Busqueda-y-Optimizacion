@@ -91,8 +91,10 @@ else:
         if not outgoing:
             return 0
         return min(outgoing) * 2
-
-    def heuristic_wrapper(node, graph, closed):
+        
+    def heuristic_wrapper(node, graph, closed, goal):
+        if node == goal:
+            return 0  # heurística del nodo final = 0
         if heur_option == "Costo uniforme (h=0)":
             return 0
         else:
@@ -115,8 +117,9 @@ else:
         closed = set()
         
         g = {start: 0}
-        h = {start: heuristic_wrapper(start, graph, closed)}
+        h = {start: heuristic_wrapper(start, graph, closed, goal)}
         f = {start: g[start] + h[start]}
+
     
         expansion_log = []
         step = 1
@@ -155,7 +158,7 @@ else:
                     continue
     
                 tentative_g = g[current] + attrs['km'] * attrs['cost_state']
-                tentative_h = heuristic_wrapper(neighbor, graph, closed)
+                tentative_h = heuristic_wrapper(neighbor, graph, closed, goal)
                 tentative_f = tentative_g + tentative_h
     
                 if neighbor not in g or tentative_g < g[neighbor]:
