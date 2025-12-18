@@ -166,21 +166,33 @@ else:
     
             closed.add(current)
     
+            node_instance_counter = {}  # contador global de instancias de nodo
             # expandir vecinos según A*
             for _, neighbor, attrs in graph.out_edges(current, data=True):
                 if neighbor in closed:
                     continue
-    
+            
                 tentative_g = g[current] + attrs['km'] * attrs['cost_state']
                 tentative_h = heuristic_wrapper(neighbor, graph, closed, goal)
                 tentative_f = tentative_g + tentative_h
-    
+            
+                # Cada instancia del nodo es única
+                node_instance_counter[neighbor] = node_instance_counter.get(neighbor, 0) + 1
+                neighbor_instance = f"{neighbor}_{node_instance_counter[neighbor]}"
+            
+                # actualizar g/h/f si es la primera vez o si encontramos un mejor camino
                 if neighbor not in g or tentative_g < g[neighbor]:
-                    came_from[neighbor] = current
-                    g[neighbor] = tentative_g
-                    h[neighbor] = tentative_h
-                    f[neighbor] = tentative_f
-                    heapq.heappush(open_heap, (tentative_f, neighbor))
+                    came_from[neighbor_instance] = current
+                    g[neighbor_instance] = tentative_g
+                    h[neighbor_instance] = tentative_h
+                    f[neighbor_instance] = tentative_f
+                    heapq.heappush(open_heap, (tentative_f, neighbor_instance))
+            
+                    # Guardar la instancia en all_nodes
+                    all_nodes[neighbor_instance] = current
+                    
+
+                    
     
                     # Guardar todos los nodos abiertos con su padre si no existía
                     if neighbor not in all_nodes:
