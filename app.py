@@ -262,7 +262,7 @@ else:
     #     st.pyplot(fig)
 
 
-    def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals):
+    def draw_decision_tree(solution_path, expansion_log, g_vals, h_vals, f_vals, all_nodes):
         import networkx as nx
         import matplotlib.pyplot as plt
     
@@ -473,6 +473,7 @@ else:
                 expansion_log=result["log"],
                 g_vals=result["g"],
                 h_vals=result["h"],
-                f_vals=result["f"]
+                f_vals=result["f"],
+                all_nodes=result["all_nodes"]
             )
 
