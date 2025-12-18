@@ -106,23 +106,23 @@ else:
     else:
         st.caption("Heurística subestimada basada en el arco saliente más corto, multiplicando por el costo más barato.")
     
-    
+        
     # --------------------------
-    # Algoritmo A* paso a paso con log completo
+    # Algoritmo A* paso a paso con log completo (con nodos abiertos)
     # --------------------------
     def a_star_full(graph, start, goal):
         open_heap = []
         heapq.heappush(open_heap, (0, start))
         came_from = {}
         closed = set()
-        
+    
         g = {start: 0}
         h = {start: heuristic_wrapper(start, graph, closed, goal)}
         f = {start: g[start] + h[start]}
-
     
         expansion_log = []
         step = 1
+        all_nodes = {start: None}  # nodo -> padre, para nodos abiertos incluso si no se expanden
     
         while open_heap:
             _, current = heapq.heappop(open_heap)
@@ -132,7 +132,7 @@ else:
             # --- todos los vecinos posibles ---
             neighbors = [n for _, n, _ in graph.out_edges(current, data=True) if n not in closed]
     
-            # Guardar h y f **actuales** antes de marcar como cerrado
+            # Guardar h y f actuales antes de marcar como cerrado
             hcur = h[current]
             fcur = f[current]
     
@@ -140,16 +140,14 @@ else:
             open_nodes = [n for _, n in open_heap]
             expansion_log.append((step, current, g[current], hcur, fcur, neighbors, open_nodes, list(closed)))
             step += 1
-
-            
+    
             if current == goal:
-                # SOLO parar si es realmente el menor coste posible
                 if open_heap:
                     min_open_f = open_heap[0][0]
                     if min_open_f < f[current]:
                         closed.add(current)
                         continue
-        
+    
                 # reconstruir camino óptimo
                 path = [current]
                 while current in came_from:
@@ -162,9 +160,10 @@ else:
                     "g": g,
                     "h": h,
                     "f": f,
-                    "came_from": came_from
+                    "came_from": came_from,
+                    "all_nodes": all_nodes
                 }
-
+    
             closed.add(current)
     
             # expandir vecinos según A*
@@ -183,7 +182,12 @@ else:
                     f[neighbor] = tentative_f
                     heapq.heappush(open_heap, (tentative_f, neighbor))
     
-        return {"path": None, "log": expansion_log, "g": g, "h": h, "f": f, "came_from": came_from}
+                    # Guardar todos los nodos abiertos con su padre si no existía
+                    if neighbor not in all_nodes:
+                        all_nodes[neighbor] = current
+    
+        return {"path": None, "log": expansion_log, "g": g, "h": h, "f": f, "came_from": came_from, "all_nodes": all_nodes}
+    
 
     
     # --------------------------
