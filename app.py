@@ -140,16 +140,31 @@ else:
             open_nodes = [n for _, n in open_heap]
             expansion_log.append((step, current, g[current], hcur, fcur, neighbors, open_nodes, list(closed)))
             step += 1
-    
+
+            
             if current == goal:
-                # reconstruir camino óptimo
-                path = [current]
-                while current in came_from:
-                    current = came_from[current]
-                    path.append(current)
-                path = path[::-1]
-                return {"path": path, "log": expansion_log, "g": g, "h": h, "f": f, "came_from": came_from}
-    
+            # SOLO parar si es realmente el menor coste posible
+            if open_heap:
+                min_open_f = open_heap[0][0]
+                if min_open_f < f[current]:
+                    closed.add(current)
+                    continue
+        
+            # reconstruir camino óptimo
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.append(current)
+            path = path[::-1]
+            return {
+                "path": path,
+                "log": expansion_log,
+                "g": g,
+                "h": h,
+                "f": f,
+                "came_from": came_from
+            }
+
             closed.add(current)
     
             # expandir vecinos según A*
