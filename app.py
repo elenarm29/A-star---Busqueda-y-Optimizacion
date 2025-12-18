@@ -124,31 +124,24 @@ else:
         step = 1
         all_nodes = {start: None}  # nodo -> padre, para nodos abiertos incluso si no se expanden
     
+        node_instance_counter = {}  # contador global de instancias de nodo
+    
         while open_heap:
             _, current = heapq.heappop(open_heap)
             if current in closed:
                 continue
     
-            # --- todos los vecinos posibles ---
             neighbors = [n for _, n, _ in graph.out_edges(current, data=True) if n not in closed]
     
-            # Guardar h y f actuales antes de marcar como cerrado
             hcur = h[current]
             fcur = f[current]
     
-            # Registrar el paso con todos los vecinos
             open_nodes = [n for _, n in open_heap]
             expansion_log.append((step, current, g[current], hcur, fcur, neighbors, open_nodes, list(closed)))
             step += 1
     
             if current == goal:
-                if open_heap:
-                    min_open_f = open_heap[0][0]
-                    if min_open_f < f[current]:
-                        closed.add(current)
-                        continue
-    
-                # reconstruir camino óptimo
+                # reconstruir camino
                 path = [current]
                 while current in came_from:
                     current = came_from[current]
@@ -166,40 +159,25 @@ else:
     
             closed.add(current)
     
-            node_instance_counter = {}  # contador global de instancias de nodo
-            # expandir vecinos según A*
+            # expandir vecinos
             for _, neighbor, attrs in graph.out_edges(current, data=True):
-                if neighbor in closed:
-                    continue
-            
                 tentative_g = g[current] + attrs['km'] * attrs['cost_state']
                 tentative_h = heuristic_wrapper(neighbor, graph, closed, goal)
                 tentative_f = tentative_g + tentative_h
-            
-                # Cada instancia del nodo es única
+    
                 node_instance_counter[neighbor] = node_instance_counter.get(neighbor, 0) + 1
                 neighbor_instance = f"{neighbor}_{node_instance_counter[neighbor]}"
-            
-                # actualizar g/h/f si es la primera vez o si encontramos un mejor camino
-                if neighbor not in g or tentative_g < g[neighbor]:
-                    came_from[neighbor_instance] = current
-                    g[neighbor_instance] = tentative_g
-                    h[neighbor_instance] = tentative_h
-                    f[neighbor_instance] = tentative_f
-                    heapq.heappush(open_heap, (tentative_f, neighbor_instance))
-            
-                    # Guardar la instancia en all_nodes
-                    all_nodes[neighbor_instance] = current
-                    
-
-                    
     
-                    # Guardar todos los nodos abiertos con su padre si no existía
-                    if neighbor not in all_nodes:
-                        all_nodes[neighbor] = current
+                came_from[neighbor_instance] = current
+                g[neighbor_instance] = tentative_g
+                h[neighbor_instance] = tentative_h
+                f[neighbor_instance] = tentative_f
+                heapq.heappush(open_heap, (tentative_f, neighbor_instance))
+    
+                all_nodes[neighbor_instance] = current
     
         return {"path": None, "log": expansion_log, "g": g, "h": h, "f": f, "came_from": came_from, "all_nodes": all_nodes}
-    
+
 
     
     # --------------------------
