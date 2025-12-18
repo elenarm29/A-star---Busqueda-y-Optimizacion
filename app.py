@@ -39,74 +39,74 @@ else:
     # Aquí va TODO tu código de A*
 
     
-    
-    
+        
     
     # --------------------------
     # Datos del grafo
     # --------------------------
-    edges = [
-        ("A","B","Verde",2,280),
-        ("A","C","Naranja",5,563),
-        ("B","A","Rojo",8,272),
-        ("B","D","Verde",2,649),
-        ("C","F","Verde",2,718),
-        ("D","C","Verde",2,361),
-        ("D","E","Naranja",5,323),
-        ("E","H","Verde",2,340),
-        ("E","D","Rojo",8,343),
-        ("E","F","Verde",2,411),
-        ("F","A","Naranja",5,371),
-        ("F","E","Rojo",8,356),
-        ("G","F","Verde",2,372),
-        ("G","E","Naranja",5,532),
-        ("H","D","Rojo",8,466),
-        ("H","G","Rojo",8,727),
-    ]
+    # edges = [
+    #     ("A","B","Verde",2,280),
+    #     ("A","C","Naranja",5,563),
+    #     ("B","A","Rojo",8,272),
+    #     ("B","D","Verde",2,649),
+    #     ("C","F","Verde",2,718),
+    #     ("D","C","Verde",2,361),
+    #     ("D","E","Naranja",5,323),
+    #     ("E","H","Verde",2,340),
+    #     ("E","D","Rojo",8,343),
+    #     ("E","F","Verde",2,411),
+    #     ("F","A","Naranja",5,371),
+    #     ("F","E","Rojo",8,356),
+    #     ("G","F","Verde",2,372),
+    #     ("G","E","Naranja",5,532),
+    #     ("H","D","Rojo",8,466),
+    #     ("H","G","Rojo",8,727),
+    # ]
     
-    # --------------------------
-    # Construir grafo
-    # --------------------------
-    G = nx.DiGraph()
-    for o,d,color,cost,km in edges:
-        G.add_edge(o, d, color=color, cost_state=cost, km=km)
+    # # --------------------------
+    # # Construir grafo
+    # # --------------------------
+    # G = nx.DiGraph()
+    # for o,d,color,cost,km in edges:
+    #     G.add_edge(o, d, color=color, cost_state=cost, km=km)
     
-    nodes = sorted(list(set([n for e in edges for n in e[:2]])))
-    start = st.selectbox("Nodo inicio", nodes, index=nodes.index("A") if "A" in nodes else 0)
-    goal = st.selectbox("Nodo destino", nodes, index=nodes.index("H") if "H" in nodes else -1)
+    # nodes = sorted(list(set([n for e in edges for n in e[:2]])))
+    # start = st.selectbox("Nodo inicio", nodes, index=nodes.index("A") if "A" in nodes else 0)
+    # goal = st.selectbox("Nodo destino", nodes, index=nodes.index("H") if "H" in nodes else -1)
     
-    # --------------------------
-    # Selección de heurística
-    # --------------------------
-    heur_option = st.selectbox(
-        "Selecciona una heurística",
-        ["Arco más corto × costo más barato", "Costo uniforme (h=0)"]
-    )
+    # # --------------------------
+    # # Selección de heurística
+    # # --------------------------
+    # heur_option = st.selectbox(
+    #     "Selecciona una heurística",
+    #     ["Arco más corto × costo más barato", "Costo uniforme (h=0)"]
+    # )
 
-    def heuristic(node, graph, closed):
-        outgoing = [
-            attrs["km"]
-            for _, n, attrs in graph.out_edges(node, data=True)
-            if n not in closed
-        ]
-        if not outgoing:
-            return 0
-        return min(outgoing) * 2
+    # def heuristic(node, graph, closed):
+    #     outgoing = [
+    #         attrs["km"]
+    #         for _, n, attrs in graph.out_edges(node, data=True)
+    #         if n not in closed
+    #     ]
+    #     if not outgoing:
+    #         return 0
+    #     return min(outgoing) * 2
         
-    def heuristic_wrapper(node, graph, closed, goal):
-        if node == goal:
-            return 0  # heurística del nodo final = 0
-        if heur_option == "Costo uniforme (h=0)":
-            return 0
-        else:
-            return heuristic(node, graph, closed)
+    # def heuristic_wrapper(node, graph, closed, goal):
+    #     if node == goal:
+    #         return 0  # heurística del nodo final = 0
+    #     if heur_option == "Costo uniforme (h=0)":
+    #         return 0
+    #     else:
+    #         return heuristic(node, graph, closed)
 
     
-    if heur_option == "Costo uniforme (h=0)":
-        st.caption("Heurística nula: el algoritmo se comporta como Dijkstra.")
-    else:
-        st.caption("Heurística subestimada basada en el arco saliente más corto, multiplicando por el costo más barato.")
+    # if heur_option == "Costo uniforme (h=0)":
+    #     st.caption("Heurística nula: el algoritmo se comporta como Dijkstra.")
+    # else:
+    #     st.caption("Heurística subestimada basada en el arco saliente más corto, multiplicando por el costo más barato.")
     
+
         
     # # --------------------------
     # # Algoritmo A* paso a paso con log completo (con nodos abiertos)
