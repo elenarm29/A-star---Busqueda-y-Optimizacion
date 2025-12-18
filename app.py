@@ -473,7 +473,6 @@ else:
                 expansion_log=result["log"],
                 g_vals=result["g"],
                 h_vals=result["h"],
-                f_vals=result["f"],
-                all_nodes=result["all_nodes"]  # <- esto faltaba
+                f_vals=result["f"]
             )
 
